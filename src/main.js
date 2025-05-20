@@ -14,9 +14,10 @@ let wantedSystem = null;   // 'TakeCare' | 'PMO' | null
 /* -------------------------------------------------- */
 /* 1. Hjälpare för sökvägar och process-kontroll      */
 /* -------------------------------------------------- */
-function exePathFor(system) {
-  if (system === 'TakeCare') return path.join(__dirname, '../../automation_tool/takecare_64/dist/aion_takecare.exe');
-  if (system === 'PMO')      return path.join(__dirname, '../../automation_tool/pmo_32/dist/aion_pmo.exe');
+function exePathFor (system) {
+  const base = path.join(process.resourcesPath, 'tools');   // pekar inuti app.asar
+  if (system === 'TakeCare') return path.join(base, 'aion_takecare.exe');
+  if (system === 'PMO')      return path.join(base, 'aion_pmo.exe');
   return null;
 }
 

@@ -10,16 +10,19 @@
   "license": "MIT",
   "private": true,
   "main": "src/main.js",
+
   "scripts": {
     "dev": "cross-env ELECTRON_DEV=1 electron .",
     "dist": "electron-builder",
     "release": "electron-builder --publish always"
   },
+
   "dependencies": {
     "@electron/remote": "^2.1.2",
     "electron-squirrel-startup": "^1.0.1",
     "electron-updater": "^6.1.7"
   },
+
   "devDependencies": {
     "@electron-forge/cli": "^7.8.0",
     "@electron-forge/maker-deb": "^7.8.0",
@@ -38,23 +41,25 @@
     "webpack-cli": "^5.1.4",
     "webpack-dev-server": "^4.15.1"
   },
+
   "build": {
     "appId": "com.aion.notes",
     "productName": "Aion Notes",
     "asar": true,
+
     "files": [
-      "src/**/*",
+      "**/*",
       "!dist/**/*"
     ],
+
     "extraResources": [
       {
-        "from": "../automation_tool/",
-        "to": "automation_tool",
-        "filter": [
-          "**/*.exe"
-        ]
+        "from": "tools/",
+        "to":   "tools",
+        "filter": ["*.exe"]
       }
     ],
+
     "publish": [
       {
         "provider": "github",
@@ -62,13 +67,11 @@
         "repo": "aion-desktop"
       }
     ],
-    "win": {
-      "target": "nsis"
-    },
-    "directories": {
-      "buildResources": "resources"
-    }
+
+    "win": { "target": "nsis" },
+    "directories": { "buildResources": "resources" }
   },
+
   "config": {
     "forge": {
       "plugins": [

@@ -1,7 +1,7 @@
 {
   "name": "aion-desktop",
   "productName": "Aion Notes",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "Aion Notes desktop-app – spelar alltid in mikrofon + systemljud",
   "author": {
     "name": "André Trygg Wredlert",

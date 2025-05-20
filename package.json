@@ -1,0 +1,88 @@
+{
+  "name": "aion-desktop",
+  "productName": "Aion Notes",
+  "version": "1.0.0",
+  "description": "Aion Notes desktop‑app – spelar alltid in mikrofon + systemljud",
+  "author": {
+    "name": "André Trygg Wredlert",
+    "email": "atryggwredlert@gmail.com"
+  },
+  "license": "MIT",
+  "private": true,
+  "main": "src/main.js",
+  "scripts": {
+    "dev": "cross-env ELECTRON_DEV=1 electron .",
+    "start": "electron-forge start",
+    "make": "electron-forge make",
+    "publish": "electron-forge publish",
+    "pack": "electron-builder --dir",
+    "dist": "electron-builder",
+    "lint": "echo \"No linting configured\""
+  },
+  "dependencies": {
+    "@electron/remote": "^2.1.2",
+    "electron-squirrel-startup": "^1.0.1",
+    "electron-updater": "^6.1.7"
+  },
+  "devDependencies": {
+    "@electron-forge/cli": "^7.8.0",
+    "@electron-forge/maker-deb": "^7.8.0",
+    "@electron-forge/maker-rpm": "^7.8.0",
+    "@electron-forge/maker-squirrel": "^7.8.0",
+    "@electron-forge/maker-zip": "^7.8.0",
+    "@electron-forge/plugin-auto-unpack-natives": "^7.8.0",
+    "@vercel/webpack-asset-relocator-loader": "^1.7.3",
+    "cross-env": "^7.0.3",
+    "css-loader": "^6.11.0",
+    "electron": "^29.1.0",
+    "electron-builder": "^24.6.0",
+    "node-loader": "^2.1.0",
+    "style-loader": "^3.3.4",
+    "webpack": "^5.91.0",
+    "webpack-cli": "^5.1.4",
+    "webpack-dev-server": "^4.15.1"
+  },
+  "build": {
+    "appId": "com.aion.notes",
+    "productName": "Aion Notes",
+    "asar": true,
+    "files": [
+      "src/**/*",
+      "../frontend/build/**/*"
+    ],
+    "directories": {
+      "buildResources": "resources"
+    },
+    "win": {
+      "target": "nsis"
+    },
+    "extraResources": [
+      {
+        "from": "../automation_tool/",
+        "to": "automation_tool",
+        "filter": ["**/*.exe", "**/_internal/**"]
+      }
+    ]
+  },
+  "config": {
+    "forge": {
+      "plugins": [
+        [
+          {
+            "mainConfig": "./webpack.main.config.js",
+            "renderer": {
+              "config": "./webpack.renderer.config.js",
+              "entryPoints": [
+                {
+                  "html": "./src/index.html",
+                  "js": "./src/renderer.js",
+                  "name": "main_window"
+                }
+              ]
+            }
+          }
+        ]
+      ]
+    }
+  }
+}

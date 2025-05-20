@@ -1,7 +1,7 @@
 {
   "name": "aion-desktop",
   "productName": "Aion Notes",
-  "version": "1.0.3",
+  "version": "1.0.4",
   "description": "Aion Notes desktop-app – spelar alltid in mikrofon + systemljud",
   "author": {
     "name": "Aion Notes",
@@ -10,69 +10,65 @@
   "license": "MIT",
   "private": true,
   "main": "src/main.js",
-
   "scripts": {
-    "dev":     "cross-env ELECTRON_DEV=1 electron .",
-    "dist":    "electron-builder",
+    "dev": "cross-env ELECTRON_DEV=1 electron .",
+    "dist": "electron-builder",
     "release": "electron-builder --publish always"
   },
-
   "dependencies": {
-    "@electron/remote":          "^2.1.2",
+    "@electron/remote": "^2.1.2",
     "electron-squirrel-startup": "^1.0.1",
-    "electron-updater":          "^6.1.7"
+    "electron-updater": "^6.1.7"
   },
-
   "devDependencies": {
-    "@electron-forge/cli":                       "^7.8.0",
-    "@electron-forge/maker-deb":                 "^7.8.0",
-    "@electron-forge/maker-rpm":                 "^7.8.0",
-    "@electron-forge/maker-squirrel":            "^7.8.0",
-    "@electron-forge/maker-zip":                 "^7.8.0",
-    "@electron-forge/plugin-auto-unpack-natives":"^7.8.0",
-    "@vercel/webpack-asset-relocator-loader":    "^1.7.3",
-    "cross-env":                                 "^7.0.3",
-    "css-loader":                                "^6.11.0",
-    "electron":                                  "^29.1.0",
-    "electron-builder":                          "^24.6.0",
-    "node-loader":                               "^2.1.0",
-    "style-loader":                              "^3.3.4",
-    "webpack":                                   "^5.91.0",
-    "webpack-cli":                               "^5.1.4",
-    "webpack-dev-server":                        "^4.15.1"
+    "@electron-forge/cli": "^7.8.0",
+    "@electron-forge/maker-deb": "^7.8.0",
+    "@electron-forge/maker-rpm": "^7.8.0",
+    "@electron-forge/maker-squirrel": "^7.8.0",
+    "@electron-forge/maker-zip": "^7.8.0",
+    "@electron-forge/plugin-auto-unpack-natives": "^7.8.0",
+    "@vercel/webpack-asset-relocator-loader": "^1.7.3",
+    "cross-env": "^7.0.3",
+    "css-loader": "^6.11.0",
+    "electron": "^29.1.0",
+    "electron-builder": "^24.6.0",
+    "node-loader": "^2.1.0",
+    "style-loader": "^3.3.4",
+    "webpack": "^5.91.0",
+    "webpack-cli": "^5.1.4",
+    "webpack-dev-server": "^4.15.1"
   },
-
   "build": {
     "appId": "com.aion.notes",
     "productName": "Aion Notes",
     "asar": true,
-
     "files": [
       "src/**/*",
       "!dist/**/*"
     ],
-
     "extraResources": [
       {
         "from": "../automation_tool/",
-        "to":   "automation_tool",
-        "filter": ["**/*.exe"]
+        "to": "automation_tool",
+        "filter": [
+          "**/*.exe"
+        ]
       }
     ],
-
     "publish": [
       {
         "provider": "github",
-        "owner":    "Andwre",
-        "repo":     "aion-desktop"
+        "owner": "Andwre",
+        "repo": "aion-desktop"
       }
     ],
-
-    "win": { "target": "nsis" },
-
-    "directories": { "buildResources": "resources" }
+    "win": {
+      "target": "nsis"
+    },
+    "directories": {
+      "buildResources": "resources"
+    }
   },
-
   "config": {
     "forge": {
       "plugins": [
@@ -80,12 +76,12 @@
           "@electron-forge/plugin-webpack",
           {
             "mainConfig": "./webpack.main.config.js",
-            "renderer":   {
+            "renderer": {
               "config": "./webpack.renderer.config.js",
               "entryPoints": [
                 {
                   "html": "./src/index.html",
-                  "js":   "./src/renderer.js",
+                  "js": "./src/renderer.js",
                   "name": "main_window"
                 }
               ]

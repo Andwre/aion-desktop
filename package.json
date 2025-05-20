@@ -1,7 +1,7 @@
 {
   "name": "aion-desktop",
   "productName": "Aion Notes",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Aion Notes desktop-app – spelar alltid in mikrofon + systemljud",
   "author": {
     "name": "André Trygg Wredlert",
@@ -10,20 +10,17 @@
   "license": "MIT",
   "private": true,
   "main": "src/main.js",
-
   "scripts": {
     "dev": "cross-env ELECTRON_DEV=1 electron .",
     "build-webpack": "webpack --config webpack.main.config.js && webpack --config webpack.renderer.config.js",
     "dist": "npm run build-webpack && electron-builder",
     "release": "npm run build-webpack && electron-builder --publish always"
   },
-
   "dependencies": {
     "@electron/remote": "^2.1.2",
     "electron-squirrel-startup": "^1.0.1",
     "electron-updater": "^6.1.7"
   },
-
   "devDependencies": {
     "@electron-forge/cli": "^7.8.0",
     "@electron-forge/maker-deb": "^7.8.0",
@@ -42,26 +39,24 @@
     "webpack-cli": "^5.1.4",
     "webpack-dev-server": "^4.15.1"
   },
-
   "build": {
     "appId": "com.aion.notes",
     "productName": "Aion Notes",
     "asar": true,
-
     "files": [
       "src/**/*",
       "!dist/**/*",
       "!node_modules/**/*"
     ],
-
     "extraResources": [
       {
         "from": "../automation_tool/",
         "to": "automation_tool",
-        "filter": ["**/*.exe"]
+        "filter": [
+          "**/*.exe"
+        ]
       }
     ],
-
     "publish": [
       {
         "provider": "github",
@@ -69,16 +64,13 @@
         "repo": "aion-desktop"
       }
     ],
-
     "win": {
       "target": "nsis"
     },
-
     "directories": {
       "buildResources": "resources"
     }
   },
-
   "config": {
     "forge": {
       "plugins": [

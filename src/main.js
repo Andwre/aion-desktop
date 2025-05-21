@@ -100,7 +100,7 @@ function createWindow() {
     }
   });
 
-  const frontendURL = process.env.FRONTEND_URL || 'https://dev.aionnotes.io';
+  const frontendURL = process.env.FRONTEND_URL || 'https://aionnotes.io';
   win.loadURL(frontendURL);
 }
 

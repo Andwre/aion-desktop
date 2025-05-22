@@ -1,10 +1,13 @@
 /* -------------------------------------------------- */
-/*  Aion Notes – Electron main-process                 */
-/*  Auto-update + TakeCare / PMO-starter                */
+/*  Aion Notes – Electron main-process                */
+/*  Blockerande auto-update + TakeCare / PMO-starter   */
 /* -------------------------------------------------- */
-const { app, BrowserWindow, desktopCapturer, session, ipcMain } = require('electron');
-const { autoUpdater } = require('electron-updater');      // ★ NYTT
-const path   = require('node:path');
+const {
+  app, BrowserWindow, desktopCapturer,
+  session, ipcMain
+} = require('electron');
+const { autoUpdater }  = require('electron-updater');
+const path             = require('node:path');
 const { spawn, execSync } = require('node:child_process');
 
 let win;
@@ -20,22 +23,17 @@ function exePathFor (system) {
   if (system === 'PMO')      return path.join(base, 'aion_pmo.exe');
   return null;
 }
-
 function exeNameFor(system) {
   if (system === 'TakeCare') return 'aion_takecare.exe';
   if (system === 'PMO')      return 'aion_pmo.exe';
   return null;
 }
-
 function isProcessRunning(exeName) {
   try {
     const out = execSync(`tasklist /FI "IMAGENAME eq ${exeName}"`, { encoding: 'utf8' });
     return out.toLowerCase().includes(exeName.toLowerCase());
-  } catch {
-    return false;
-  }
+  } catch { return false; }
 }
-
 function killProcessByExe(exeName) {
   try { execSync(`taskkill /F /IM ${exeName}`, { stdio: 'ignore' }); } catch {}
 }
@@ -45,8 +43,8 @@ function killProcessByExe(exeName) {
 /* -------------------------------------------------- */
 function launchTransfer(system) {
   if (!system) return;
-  const exePath  = exePathFor(system);
-  const exeName  = exeNameFor(system);
+  const exePath = exePathFor(system);
+  const exeName = exeNameFor(system);
   if (!exePath || !exeName) return;
 
   if (isProcessRunning(exeName)) {
@@ -60,16 +58,15 @@ function launchTransfer(system) {
   console.log(`[transfer] startade ${system}`);
 
   transferProc.on('exit', () => {
-    console.log(`[transfer] dog – försöker återstarta`);
+    console.log('[transfer] dog – försöker återstarta');
     transferProc = null;
     if (wantedSystem) setTimeout(() => launchTransfer(wantedSystem), 1000);
   });
 }
-
 function stopTransfer() {
   if (!wantedSystem) return;
   const exeName = exeNameFor(wantedSystem);
-  wantedSystem = null;
+  wantedSystem  = null;
 
   if (transferProc && !transferProc.killed) transferProc.kill();
   if (exeName) killProcessByExe(exeName);
@@ -87,7 +84,7 @@ ipcMain.on('transfer-start', (_e, system) => {
 ipcMain.on('transfer-stop', () => stopTransfer());
 
 /* -------------------------------------------------- */
-/* 4. Skapa fönster & media-hook                      */
+/* 4. Fönster + media-hook                            */
 /* -------------------------------------------------- */
 function createWindow() {
   win = new BrowserWindow({
@@ -100,29 +97,62 @@ function createWindow() {
       nodeIntegration: false
     }
   });
-
   const frontendURL = process.env.FRONTEND_URL || 'https://aionnotes.io';
   win.loadURL(frontendURL);
 }
 
 /* -------------------------------------------------- */
-/* 5. Huvudflöde                                      */
+/* 5. Blockerande auto-update vid start               */
 /* -------------------------------------------------- */
-app.whenReady().then(() => {
+async function checkForUpdatesBlocking() {
+  return new Promise((resolve) => {
+    const splash = new BrowserWindow({
+      width: 380, height: 160, frame: false, resizable: false,
+      alwaysOnTop: true, modal: true, show: false,
+      webPreferences: { contextIsolation: true }
+    });
+    splash.loadURL(
+      'data:text/html,' + encodeURIComponent(`
+        <style>
+          body{margin:0;font-family:sans-serif;
+               display:flex;align-items:center;justify-content:center;height:100%;}
+        </style>
+        <h3>Hämtar uppdatering …</h3>`));
+    splash.once('ready-to-show', () => splash.show());
+
+    autoUpdater.autoDownload = true;
+    autoUpdater.autoInstallOnAppQuit = false;
+
+    autoUpdater.on('update-not-available', () => { splash.close(); resolve(false); });
+    autoUpdater.on('error',               () => { splash.close(); resolve(false); });
+
+    autoUpdater.on('update-downloaded', () => {
+      splash.close();
+      console.log('[auto-update] Ny version nedladdad – installerar & startar om');
+      autoUpdater.quitAndInstall();   // appen avslutas här om uppdatering fanns
+    });
+
+    autoUpdater.checkForUpdates();
+  });
+}
+
+/* -------------------------------------------------- */
+/* 6. Huvud-flöde                                     */
+/* -------------------------------------------------- */
+app.whenReady().then(async () => {
   /* Hook för system-ljud */
   session.defaultSession.setDisplayMediaRequestHandler(async (_req, cb) => {
     const [screen] = await desktopCapturer.getSources({ types: ['screen'] });
     cb({ video: screen, audio: 'loopback' });
   });
 
-  /* Auto-update – laddar & installerar tyst på quit */
-  autoUpdater.checkForUpdatesAndNotify();
-
+  /* Blockera tills ev. uppdatering är klar */
+  await checkForUpdatesBlocking();
   createWindow();
 });
 
 /* -------------------------------------------------- */
-/* 6. Städa vid avslut                                */
+/* 7. Städa vid avslut                                */
 /* -------------------------------------------------- */
 app.on('before-quit', () => stopTransfer());
 app.on('window-all-closed', () => { if (process.platform !== 'darwin') app.quit(); });

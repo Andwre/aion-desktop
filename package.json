@@ -1,7 +1,7 @@
 {
   "name": "aion-desktop",
   "productName": "Aion Notes",
-  "version": "1.0.8",
+  "version": "1.0.7",
   "description": "Aion Notes desktop-app – spelar alltid in mikrofon + systemljud",
   "author": {
     "name": "Aion Notes",
@@ -53,6 +53,14 @@
         "filter": [
           "*.exe"
         ]
+      }
+    ],
+    "publish": [
+      {
+        "provider": "github",
+        "owner": "Andwre",
+        "repo": "aion-desktop",
+        "releaseType": "release"
       }
     ],
     "win": {

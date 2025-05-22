@@ -1,6 +1,6 @@
 /* -------------------------------------------------- */
 /*  Aion Notes – Electron main-process                */
-/*  Blockerande auto-update + TakeCare / PMO-starter   */
+/*  Blockerande auto-update + TakeCare / PMO-starter  */
 /* -------------------------------------------------- */
 const {
   app, BrowserWindow, desktopCapturer,
@@ -8,63 +8,86 @@ const {
 } = require('electron');
 const { autoUpdater }  = require('electron-updater');
 const path             = require('node:path');
+const fs               = require('node:fs');
 const { spawn, execSync } = require('node:child_process');
 
 let win;
-let transferProc = null;   // ChildProcess-referens
-let wantedSystem = null;   // 'TakeCare' | 'PMO' | null
+let transferProc = null;        // ChildProcess-referens
+let wantedSystem = null;        // 'TakeCare' | 'PMO' | null
 
 /* -------------------------------------------------- */
 /* 1. Hjälpare för sökvägar och process-kontroll      */
 /* -------------------------------------------------- */
 function exePathFor (system) {
-  const base = path.join(process.resourcesPath, 'tools');   // pekar inuti app.asar
+  const base = path.join(process.resourcesPath, 'tools');   // ligger i resources/tools/
   if (system === 'TakeCare') return path.join(base, 'aion_takecare.exe');
   if (system === 'PMO')      return path.join(base, 'aion_pmo.exe');
   return null;
 }
-function exeNameFor(system) {
+function exeNameFor (system) {
   if (system === 'TakeCare') return 'aion_takecare.exe';
   if (system === 'PMO')      return 'aion_pmo.exe';
   return null;
 }
-function isProcessRunning(exeName) {
+function isProcessRunning (exeName) {
   try {
-    const out = execSync(`tasklist /FI "IMAGENAME eq ${exeName}"`, { encoding: 'utf8' });
+    const out = execSync(
+      `tasklist /FI "IMAGENAME eq ${exeName}"`,
+      { encoding: 'utf8' }
+    );
     return out.toLowerCase().includes(exeName.toLowerCase());
   } catch { return false; }
 }
-function killProcessByExe(exeName) {
+function killProcessByExe (exeName) {
   try { execSync(`taskkill /F /IM ${exeName}`, { stdio: 'ignore' }); } catch {}
 }
 
 /* -------------------------------------------------- */
 /* 2. Start / stop & autorestart-logik                */
 /* -------------------------------------------------- */
-function launchTransfer(system) {
+function launchTransfer (system) {
   if (!system) return;
+
   const exePath = exePathFor(system);
   const exeName = exeNameFor(system);
   if (!exePath || !exeName) return;
 
+  // —–– Verifiera att filen finns —––
+  if (!fs.existsSync(exePath)) {
+    console.error(`[transfer] Hittar inte filen: ${exePath}`);
+    return;
+  }
+
+  // finns redan en levande process?
   if (isProcessRunning(exeName)) {
     console.log(`[transfer] ${exeName} redan igång`);
     return;
   }
 
+  // döda ev. gammal referens
   if (transferProc && !transferProc.killed) transferProc.kill();
-  transferProc = spawn(exePath, [], { detached: true, windowsHide: true, stdio: 'ignore' });
+
+  // starta
+  transferProc = spawn(exePath, [], { detached: true, windowsHide: true });
   transferProc.unref();
   console.log(`[transfer] startade ${system}`);
 
-  transferProc.on('exit', () => {
-    console.log('[transfer] dog – försöker återstarta');
+  // logga om spawn själv fallerar (t.ex. saknad DLL)
+  transferProc.on('error', (err) =>
+    console.error('[transfer] kunde inte starta processen:', err)
+  );
+
+  // hantera oväntad död
+  transferProc.on('exit', (code, sig) => {
+    console.error(`[transfer] processen dog (code=${code} sig=${sig})`);
     transferProc = null;
     if (wantedSystem) setTimeout(() => launchTransfer(wantedSystem), 1000);
   });
 }
-function stopTransfer() {
+
+function stopTransfer () {
   if (!wantedSystem) return;
+
   const exeName = exeNameFor(wantedSystem);
   wantedSystem  = null;
 
@@ -86,7 +109,7 @@ ipcMain.on('transfer-stop', () => stopTransfer());
 /* -------------------------------------------------- */
 /* 4. Fönster + media-hook                            */
 /* -------------------------------------------------- */
-function createWindow() {
+function createWindow () {
   const appVersion = app.getVersion();
 
   win = new BrowserWindow({
@@ -100,6 +123,7 @@ function createWindow() {
       nodeIntegration: false
     }
   });
+
   const frontendURL = process.env.FRONTEND_URL || 'https://aionnotes.io';
   win.loadURL(frontendURL);
 }
@@ -107,32 +131,33 @@ function createWindow() {
 /* -------------------------------------------------- */
 /* 5. Blockerande auto-update vid start               */
 /* -------------------------------------------------- */
-async function checkForUpdatesBlocking() {
+function checkForUpdatesBlocking () {
   return new Promise((resolve) => {
     const splash = new BrowserWindow({
       width: 380, height: 160, frame: false, resizable: false,
       alwaysOnTop: true, modal: true, show: false,
       webPreferences: { contextIsolation: true }
     });
-    splash.loadURL(
-      'data:text/html,' + encodeURIComponent(`
-        <style>
-          body{margin:0;font-family:sans-serif;
-               display:flex;align-items:center;justify-content:center;height:100%;}
-        </style>
-        <h3>Hämtar uppdatering …</h3>`));
+
+    splash.loadURL('data:text/html,' + encodeURIComponent(`
+      <style>
+        body{margin:0;font-family:sans-serif;
+             display:flex;align-items:center;justify-content:center;height:100%;}
+      </style>
+      <h3>Hämtar uppdatering …</h3>`));
+
     splash.once('ready-to-show', () => splash.show());
 
-    autoUpdater.autoDownload = true;
-    autoUpdater.autoInstallOnAppQuit = false;
+    autoUpdater.autoDownload          = true;
+    autoUpdater.autoInstallOnAppQuit  = false;
 
     autoUpdater.on('update-not-available', () => { splash.close(); resolve(false); });
-    autoUpdater.on('error',               () => { splash.close(); resolve(false); });
+    autoUpdater.on('error',               (e) => { console.error('[update]', e); splash.close(); resolve(false); });
 
     autoUpdater.on('update-downloaded', () => {
       splash.close();
-      console.log('[auto-update] Ny version nedladdad – installerar & startar om');
-      autoUpdater.quitAndInstall();   // appen avslutas här om uppdatering fanns
+      console.log('[update] Ny version nedladdad – installerar & startar om');
+      autoUpdater.quitAndInstall();        // appen avslutas om det fanns uppdatering
     });
 
     autoUpdater.checkForUpdates();
@@ -143,13 +168,13 @@ async function checkForUpdatesBlocking() {
 /* 6. Huvud-flöde                                     */
 /* -------------------------------------------------- */
 app.whenReady().then(async () => {
-  /* Hook för system-ljud */
+  // Hook för system-ljud
   session.defaultSession.setDisplayMediaRequestHandler(async (_req, cb) => {
     const [screen] = await desktopCapturer.getSources({ types: ['screen'] });
     cb({ video: screen, audio: 'loopback' });
   });
 
-  /* Blockera tills ev. uppdatering är klar */
+  // Blockera tills ev. uppdatering är klar
   await checkForUpdatesBlocking();
   createWindow();
 });

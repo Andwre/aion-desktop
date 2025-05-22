@@ -59,11 +59,14 @@
       {
         "provider": "github",
         "owner": "Andwre",
-        "repo": "aion-desktop"
+        "repo": "aion-desktop",
+        "draft": false,
+        "prerelease": false
       }
     ],
     "win": {
-      "target": "nsis"
+      "target": "nsis",
+      "icon": "resources/icon.ico"
     },
     "directories": {
       "buildResources": "resources"

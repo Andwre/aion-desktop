@@ -55,15 +55,7 @@
         ]
       }
     ],
-    "publish": [
-      {
-        "provider": "github",
-        "owner": "Andwre",
-        "repo": "aion-desktop",
-        "draft": false,
-        "prerelease": false
-      }
-    ],
+
     "win": {
       "target": "nsis",
       "icon": "resources/icon.ico"

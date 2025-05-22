@@ -65,7 +65,7 @@
     ],
     "win": {
       "target": "nsis",
-      "icon": "resources/icon.ico"
+      "icon": "resources/aion.ico"
     },
     "directories": {
       "buildResources": "resources"
